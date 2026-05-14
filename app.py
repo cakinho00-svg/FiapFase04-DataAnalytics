@@ -65,6 +65,25 @@ df_viz["Transporte"] = df_viz["MTRANS"].map(mapa_transporte)
 df_viz["Consumo entre refeições"] = df_viz["CAEC"].map(mapa_frequencia)
 df_viz["Consumo de álcool"] = df_viz["CALC"].map(mapa_frequencia)
 
+df_viz["Atividade física"] = df_viz["FAF"].map({
+    0: "Nenhuma",
+    1: "Baixa",
+    2: "Moderada",
+    3: "Alta"
+})
+
+df_viz["Uso de tecnologia"] = df_viz["TUE"].map({
+    0: "Baixo",
+    1: "Moderado",
+    2: "Alto"
+})
+
+df_viz["Consumo de água"] = df_viz["CH2O"].map({
+    1: "Baixo",
+    2: "Moderado",
+    3: "Alto"
+})
+
 ordem_obesidade = [
     "Peso insuficiente",
     "Peso normal",
@@ -80,6 +99,11 @@ ordem_grupo = [
     "Sobrepeso",
     "Obesidade"
 ]
+
+ordem_sim_nao = ["Não", "Sim"]
+ordem_frequencia = ["Não", "Às vezes", "Frequentemente", "Sempre"]
+ordem_atividade = ["Nenhuma", "Baixa", "Moderada", "Alta"]
+ordem_nivel = ["Baixo", "Moderado", "Alto"]
 
 # ======================================================
 # Cabeçalho do app
@@ -283,7 +307,16 @@ with aba2:
 
     st.divider()
 
+    # =========================
+    # Filtros
+    # =========================
+
     st.subheader("Filtros da análise")
+
+    st.caption(
+        "Os filtros são opcionais. Caso nenhum filtro seja selecionado, "
+        "os gráficos apresentarão a visão geral com todos os registros da base."
+    )
 
     col_f1, col_f2, col_f3 = st.columns(3)
 
@@ -291,32 +324,125 @@ with aba2:
         filtro_genero = st.multiselect(
             "Gênero",
             options=sorted(df_viz["Gênero"].dropna().unique()),
-            default=sorted(df_viz["Gênero"].dropna().unique())
+            default=[],
+            placeholder="Selecione um ou mais gêneros"
         )
 
     with col_f2:
+        opcoes_grupo = [
+            grupo for grupo in ordem_grupo
+            if grupo in df_viz["Grupo_Obesidade"].dropna().unique()
+        ]
+
         filtro_grupo = st.multiselect(
             "Grupo de classificação corporal",
-            options=ordem_grupo,
-            default=ordem_grupo
+            options=opcoes_grupo,
+            default=[],
+            placeholder="Selecione um ou mais grupos"
         )
 
     with col_f3:
         filtro_historico = st.multiselect(
             "Histórico familiar de excesso de peso",
-            options=sorted(df_viz["Histórico familiar"].dropna().unique()),
-            default=sorted(df_viz["Histórico familiar"].dropna().unique())
+            options=[x for x in ordem_sim_nao if x in df_viz["Histórico familiar"].dropna().unique()],
+            default=[],
+            placeholder="Selecione uma ou mais opções"
         )
 
-    df_filtrado = df_viz[
-        (df_viz["Gênero"].isin(filtro_genero)) &
-        (df_viz["Grupo_Obesidade"].isin(filtro_grupo)) &
-        (df_viz["Histórico familiar"].isin(filtro_historico))
-    ]
+    col_f4, col_f5, col_f6 = st.columns(3)
 
-    st.caption(f"Registros considerados nos gráficos: {len(df_filtrado)}")
+    with col_f4:
+        filtro_alimentos_caloricos = st.multiselect(
+            "Consome alimentos calóricos com frequência?",
+            options=[x for x in ordem_sim_nao if x in df_viz["Consome alimentos calóricos"].dropna().unique()],
+            default=[],
+            placeholder="Selecione uma ou mais opções"
+        )
+
+    with col_f5:
+        filtro_transporte = st.multiselect(
+            "Meio de transporte habitual",
+            options=sorted(df_viz["Transporte"].dropna().unique()),
+            default=[],
+            placeholder="Selecione um ou mais meios"
+        )
+
+    with col_f6:
+        filtro_alcool = st.multiselect(
+            "Consumo de álcool",
+            options=[x for x in ordem_frequencia if x in df_viz["Consumo de álcool"].dropna().unique()],
+            default=[],
+            placeholder="Selecione uma ou mais opções"
+        )
+
+    col_f7, col_f8, col_f9 = st.columns(3)
+
+    with col_f7:
+        filtro_atividade = st.multiselect(
+            "Frequência de atividade física",
+            options=[x for x in ordem_atividade if x in df_viz["Atividade física"].dropna().unique()],
+            default=[],
+            placeholder="Selecione uma ou mais opções"
+        )
+
+    with col_f8:
+        filtro_agua = st.multiselect(
+            "Consumo diário de água",
+            options=[x for x in ordem_nivel if x in df_viz["Consumo de água"].dropna().unique()],
+            default=[],
+            placeholder="Selecione uma ou mais opções"
+        )
+
+    with col_f9:
+        filtro_tecnologia = st.multiselect(
+            "Uso de dispositivos tecnológicos",
+            options=[x for x in ordem_nivel if x in df_viz["Uso de tecnologia"].dropna().unique()],
+            default=[],
+            placeholder="Selecione uma ou mais opções"
+        )
+
+    df_filtrado = df_viz.copy()
+
+    if filtro_genero:
+        df_filtrado = df_filtrado[df_filtrado["Gênero"].isin(filtro_genero)]
+
+    if filtro_grupo:
+        df_filtrado = df_filtrado[df_filtrado["Grupo_Obesidade"].isin(filtro_grupo)]
+
+    if filtro_historico:
+        df_filtrado = df_filtrado[df_filtrado["Histórico familiar"].isin(filtro_historico)]
+
+    if filtro_alimentos_caloricos:
+        df_filtrado = df_filtrado[df_filtrado["Consome alimentos calóricos"].isin(filtro_alimentos_caloricos)]
+
+    if filtro_transporte:
+        df_filtrado = df_filtrado[df_filtrado["Transporte"].isin(filtro_transporte)]
+
+    if filtro_alcool:
+        df_filtrado = df_filtrado[df_filtrado["Consumo de álcool"].isin(filtro_alcool)]
+
+    if filtro_atividade:
+        df_filtrado = df_filtrado[df_filtrado["Atividade física"].isin(filtro_atividade)]
+
+    if filtro_agua:
+        df_filtrado = df_filtrado[df_filtrado["Consumo de água"].isin(filtro_agua)]
+
+    if filtro_tecnologia:
+        df_filtrado = df_filtrado[df_filtrado["Uso de tecnologia"].isin(filtro_tecnologia)]
+
+    st.caption(
+        f"Registros considerados nos gráficos: {len(df_filtrado)} de {len(df_viz)}"
+    )
+
+    if df_filtrado.empty:
+        st.warning("Nenhum registro encontrado para os filtros selecionados.")
+        st.stop()
 
     st.divider()
+
+    # =========================
+    # Gráfico 1
+    # =========================
 
     st.subheader("1. Distribuição dos níveis de obesidade")
 
@@ -482,33 +608,26 @@ with aba2:
 
         df_atividade = (
             df_filtrado
-            .groupby(["FAF", "Grupo_Obesidade"])
+            .groupby(["Atividade física", "Grupo_Obesidade"])
             .size()
             .reset_index(name="Quantidade de pessoas")
         )
 
-        df_atividade["Frequência de atividade física"] = df_atividade["FAF"].map({
-            0: "Nenhuma",
-            1: "Baixa",
-            2: "Moderada",
-            3: "Alta"
-        })
-
         fig_atividade = px.bar(
             df_atividade,
-            x="Frequência de atividade física",
+            x="Atividade física",
             y="Quantidade de pessoas",
             color="Grupo_Obesidade",
             barmode="group",
             text="Quantidade de pessoas",
             title="Frequência de atividade física por grupo corporal",
             labels={
-                "Frequência de atividade física": "Frequência de atividade física",
+                "Atividade física": "Frequência de atividade física",
                 "Quantidade de pessoas": "Quantidade de pessoas",
                 "Grupo_Obesidade": "Grupo corporal"
             },
             category_orders={
-                "Frequência de atividade física": ["Nenhuma", "Baixa", "Moderada", "Alta"],
+                "Atividade física": ordem_atividade,
                 "Grupo_Obesidade": ordem_grupo
             }
         )
