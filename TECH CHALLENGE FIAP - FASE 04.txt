@@ -1,0 +1,13 @@
+TECH CHALLENGE FIAP - FASE 04
+Projeto: Predição de Nível de Obesidade
+
+Link do repositório GitHub:
+https://github.com/cakinho00-svg/FiapFase04-DataAnalytics
+
+Link da aplicação no Streamlit:
+https://fiap-fase04-obesity.streamlit.app/
+
+Descrição resumida:
+O projeto tem como objetivo auxiliar a equipe médica na classificação do nível de obesidade de uma pessoa com base em características físicas, hábitos alimentares, histórico familiar e estilo de vida.
+
+O modelo final utilizado foi o Random Forest, com acurácia aproximada de 98% na base de teste, superando o requisito mínimo de 75% solicitado no desafio.
